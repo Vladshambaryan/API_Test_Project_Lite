@@ -38,17 +38,12 @@ jobs:
       - name: Create allure-results directory
         run: mkdir -p allure-results
 
-      - name: Check if allure-history artifact exists
-        id: check_artifact
-        run: |
-          echo "::set-output name=artifact_exists::$(curl -s -o /dev/null -w '%{http_code}' https://api.github.com/repos/${{ github.repository }}/actions/artifacts | grep -q '404' && echo 'false' || echo 'true')"
-
-      - name: Download previous report history
-        if: steps.check_artifact.outputs.artifact_exists == 'true'
+      - name: Download previous report history (ignore if not found)
         uses: actions/download-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
+        continue-on-error: true  # Пропуск шага при отсутствии артефакта
 
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
