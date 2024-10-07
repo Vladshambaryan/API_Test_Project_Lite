@@ -13,11 +13,11 @@ on:
           - smoke
           - regression
           - extended
-          
+
 permissions:
   contents: read
   pages: write
-  id-token: write         
+  id-token: write
 
 jobs:
   run-tests:
@@ -26,30 +26,41 @@ jobs:
     steps:
       - name: Checkout autotests
         uses: actions/checkout@v4
+      
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Install dependencies.
+      
+      - name: Install dependencies
         run: pip install -r requirements.txt
-        
-      - name: run all tests
+      
+      - name: Create allure-results directory
+        run: mkdir -p allure-results
+
+      - name: Download previous report history
+        uses: actions/download-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+
+      - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
         continue-on-error: true
-        
-      - name: run smoke tests
+
+      - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
         continue-on-error: true
-        
-      - name: run regression tests
+
+      - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
-        run: pytest -m regression --alluredir=allure-results 
+        run: pytest -m regression --alluredir=allure-results
         continue-on-error: true
-        
-      - name: run extended tests
-        if: "github.event.inputs.deployment_target == 'extended'" 
+
+      - name: Run extended tests
+        if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -m extended --alluredir=allure-results
         continue-on-error: true
 
@@ -58,19 +69,30 @@ jobs:
         with:
           distribution: 'microsoft'
           java-version: '17'
-          
+
       - name: Install Allure
         run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && sudo tar -zxvf allure-2.30.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
-      - name: Generate report
+
+      - name: Generate Allure report
         run: allure generate -c allure-results -o _site
         
-      - name: Save allure report
+      - name: Save Allure report with history
+        run: cp -R _site/history allure-results/history
+        
+      - name: Upload allure-results with history
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+          retention-days: 7
+
+      - name: Save Allure report
         uses: actions/upload-artifact@v3
         with:
           name: _site
           path: _site
-          retention-days: 1 
-          
+          retention-days: 1
+
   publish-report:
     name: Report publication
     runs-on: ubuntu-latest
@@ -78,10 +100,10 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
+      
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
+      
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.9
-        
-  
