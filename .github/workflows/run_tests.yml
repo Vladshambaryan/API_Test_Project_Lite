@@ -1,4 +1,5 @@
 name: Python autotests
+# Название workflow — "Python autotests". Будет отображаться в интерфейсе GitHub Actions.
 
 on:
   workflow_dispatch:
@@ -13,106 +14,131 @@ on:
           - smoke
           - regression
           - extended
+# Workflow запускается вручную через GitHub Actions с параметром выбора набора тестов:
+# all — все тесты, smoke — smoke тесты, regression — регрессионные, extended — расширенные.
 
 permissions:
   contents: read
   pages: write
   id-token: write
+# Разрешения:
+# - contents: read — доступ к содержимому репозитория (для клонирования).
+# - pages: write — возможность публикации отчета на GitHub Pages.
+# - id-token: write — необходим для авторизации при деплое.
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
     name: Run autotests
+    # Задача запуска тестов будет выполняться на виртуальной машине с Ubuntu.
+    
     steps:
       - name: Checkout autotests
         uses: actions/checkout@v4
-      
+        # Клонирование репозитория с тестами.
+
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
+        # Настройка окружения с Python версии 3.10.
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+        # Установка зависимостей из файла requirements.txt.
 
-      # Загрузка истории Allure (если артефакт существует)
-      - name: Download previous report history
+      - name: Create allure-results directory
+        run: mkdir -p allure-results
+        # Создание директории для хранения результатов тестов, чтобы Allure мог их обработать.
+
+      - name: Download previous report history (ignore if not found)
         uses: actions/download-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
-        continue-on-error: true  # Пропуск шага, если артефакт отсутствует
+        continue-on-error: true
+        # Скачивание предыдущей истории отчетов Allure, если она существует (шаг пропускается в случае отсутствия).
 
-      # Выполнение тестов с указанием директории для хранения результатов
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
+        continue-on-error: true
+        # Запуск всех тестов с записью результатов в директорию allure-results (при выборе опции 'all').
 
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
+        continue-on-error: true
+        # Запуск smoke-тестов (при выборе опции 'smoke').
 
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -m regression --alluredir=allure-results
+        continue-on-error: true
+        # Запуск регрессионных тестов (при выборе 'regression').
 
       - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -m extended --alluredir=allure-results
+        continue-on-error: true
+        # Запуск расширенных тестов (при выборе 'extended').
 
-      # Установка Java для работы Allure
       - name: Install Java
         uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
           java-version: '17'
+        # Установка Java 17, необходимого для работы Allure (он генерирует отчеты на Java).
 
-      # Установка Allure для генерации отчетов
       - name: Install Allure
-        run: |
-          sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz
-          sudo tar -zxvf allure-2.30.0.tgz -C /opt/
-          sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && sudo tar -zxvf allure-2.30.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+        # Установка Allure через скачивание архива и распаковку его на виртуальной машине.
 
-      # Генерация отчета Allure с историей
-      - name: Generate Allure report with history
-        run: |
-          cp -R allure-results/history allure-results/ || true  # Копируем историю, если она существует
-          allure generate -c allure-results -o _site
+      - name: Generate Allure report
+        run: allure generate -c allure-results -o _site
+        # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории _site.
 
-      # Сохранение истории для следующих запусков
-      - name: Save Allure report history
+      - name: Save Allure report with history
         run: cp -R _site/history allure-results/history
+        # Сохранение истории предыдущих отчетов для отображения истории в Allure.
 
-      - name: Upload allure-history artifact
+      - name: Upload allure-results with history
         uses: actions/upload-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
           retention-days: 7
+        # Загрузка артефактов истории отчетов Allure, хранение в течение 7 дней.
 
-      # Сохранение Allure отчета как артефакт
       - name: Save Allure report
         uses: actions/upload-artifact@v3
         with:
           name: _site
           path: _site
           retention-days: 1
+        # Сохранение самого Allure отчета (_site) как артефакт, который хранится 1 день.
 
-  # Публикация отчета Allure на GitHub Pages
   publish-report:
-    name: Publish Allure report
+    name: Report publication
     runs-on: ubuntu-latest
     needs: run-tests
+    # Вторая задача для публикации отчета. Выполняется только после завершения задачи run-tests.
+
     steps:
-      - name: Download Allure report
+      - name: Download Allure report artifact
         uses: actions/download-artifact@v3
         with:
           name: _site
+          path: _site
+        # Скачивание артефакта с Allure отчетом (_site).
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
+        with:
+          path: _site
+        # Загрузка отчета на GitHub Pages для публикации.
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.9
+        # Публикация Allure отчета на GitHub Pages.
