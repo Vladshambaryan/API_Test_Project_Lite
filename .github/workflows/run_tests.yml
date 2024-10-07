@@ -95,7 +95,7 @@ jobs:
         # Установка Allure через скачивание архива и распаковку его на виртуальной машине.
 
       - name: Generate Allure report
-        run: allure generate -c allure-results -o _site
+        run: allure generate -c allure-results -o allure-report
         # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории _site.
 
       - name: Save Allure report with history
@@ -113,8 +113,8 @@ jobs:
       - name: Save Allure report
         uses: actions/upload-artifact@v3
         with:
-          name: _site
-          path: _site
+          name: allure-report
+          path: allure-report
           retention-days: 1
         # Сохранение самого Allure отчета (_site) как артефакт, который хранится 1 день.
 
