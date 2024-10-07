@@ -87,7 +87,7 @@ jobs:
         run: |
           echo "Checking contents of allure-results:"
           ls -R allure-results
-
+        # Проверка содержимого директории allure-results, чтобы убедиться, что результаты тестов записаны корректно.
 
       - name: Install Java
         uses: actions/setup-java@v3
