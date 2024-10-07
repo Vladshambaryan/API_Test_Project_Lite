@@ -96,7 +96,7 @@ jobs:
 
       - name: Generate Allure report
         run: allure generate -c allure-results -o allure-report
-        # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории _site.
+        # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории allure-report.
 
       - name: Save Allure report with history
         run: cp -R allure-report/history allure-results/history
@@ -116,7 +116,7 @@ jobs:
           name: allure-report
           path: allure-report
           retention-days: 1
-        # Сохранение самого Allure отчета (_site) как артефакт, который хранится 1 день.
+        # Сохранение самого Allure отчета (allure-report) как артефакт, который хранится 1 день.
 
   publish-report:
     name: Report publication
