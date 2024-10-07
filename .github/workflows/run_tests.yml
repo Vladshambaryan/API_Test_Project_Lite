@@ -83,6 +83,12 @@ jobs:
         continue-on-error: true
         # Запуск расширенных тестов (при выборе 'extended').
 
+      - name: Check allure-results directory
+        run: |
+          echo "Checking contents of allure-results:"
+          ls -R allure-results
+
+
       - name: Install Java
         uses: actions/setup-java@v3
         with:
