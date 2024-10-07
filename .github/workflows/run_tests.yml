@@ -34,59 +34,64 @@ jobs:
       
       - name: Install dependencies
         run: pip install -r requirements.txt
-      
-      - name: Create allure-results directory
-        run: mkdir -p allure-results
 
-      - name: Download previous report history (ignore if not found)
+      # Загрузка истории Allure (если артефакт существует)
+      - name: Download previous report history
         uses: actions/download-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
-        continue-on-error: true  # Пропуск шага при отсутствии артефакта
+        continue-on-error: true  # Пропуск шага, если артефакт отсутствует
 
+      # Выполнение тестов с указанием директории для хранения результатов
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
-        continue-on-error: true
 
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
-        continue-on-error: true
 
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -m regression --alluredir=allure-results
-        continue-on-error: true
 
       - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -m extended --alluredir=allure-results
-        continue-on-error: true
 
+      # Установка Java для работы Allure
       - name: Install Java
         uses: actions/setup-java@v3
         with:
           distribution: 'microsoft'
           java-version: '17'
 
+      # Установка Allure для генерации отчетов
       - name: Install Allure
-        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && sudo tar -zxvf allure-2.30.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+        run: |
+          sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz
+          sudo tar -zxvf allure-2.30.0.tgz -C /opt/
+          sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
 
-      - name: Generate Allure report
-        run: allure generate -c allure-results -o _site
-        
-      - name: Save Allure report with history
+      # Генерация отчета Allure с историей
+      - name: Generate Allure report with history
+        run: |
+          cp -R allure-results/history allure-results/ || true  # Копируем историю, если она существует
+          allure generate -c allure-results -o _site
+
+      # Сохранение истории для следующих запусков
+      - name: Save Allure report history
         run: cp -R _site/history allure-results/history
-        
-      - name: Upload allure-results with history
+
+      - name: Upload allure-history artifact
         uses: actions/upload-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
           retention-days: 7
 
+      # Сохранение Allure отчета как артефакт
       - name: Save Allure report
         uses: actions/upload-artifact@v3
         with:
@@ -94,22 +99,20 @@ jobs:
           path: _site
           retention-days: 1
 
+  # Публикация отчета Allure на GitHub Pages
   publish-report:
-    name: Report publication
+    name: Publish Allure report
     runs-on: ubuntu-latest
     needs: run-tests
     steps:
-      - name: Download Allure report artifact
+      - name: Download Allure report
         uses: actions/download-artifact@v3
         with:
           name: _site
-          path: _site
-        
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
-        with:
-          path: _site
-      
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.9
