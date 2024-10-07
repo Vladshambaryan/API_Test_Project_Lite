@@ -101,7 +101,7 @@ jobs:
         # Установка Allure через скачивание архива и распаковку его на виртуальной машине.
 
       - name: Generate Allure report
-        run: allure generate -c allure-results -o allure-report
+        run: allure generate -c allure-results -o allure-report --history
         # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории allure-report.
 
       - name: Save Allure report with history
