@@ -51,11 +51,11 @@ jobs:
         run: mkdir -p allure-results
         # Создание директории для хранения результатов тестов, чтобы Allure мог их обработать.
 
-      - name: Download previous report history (ignore if not found)
+      - name: Download previous report results (ignore if not found)
         uses: actions/download-artifact@v3
         with:
-          name: allure-history
-          path: allure-results/history
+          name: allure-results
+          path: allure-results/results
         continue-on-error: true
         # Скачивание предыдущей истории отчетов Allure, если она существует (шаг пропускается в случае отсутствия).
 
@@ -98,15 +98,15 @@ jobs:
         run: allure generate -c allure-results -o _site
         # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории _site.
 
-      - name: Save Allure report with history
-        run: cp -R _site/history allure-results/history
+      - name: Save Allure report with results
+        run: cp -R _site/results allure-results/results
         # Сохранение истории предыдущих отчетов для отображения истории в Allure.
 
-      - name: Upload allure-results with history
+      - name: Upload allure-results with results
         uses: actions/upload-artifact@v3
         with:
-          name: allure-history
-          path: allure-results/history
+          name: allure-results
+          path: allure-results/results
           retention-days: 7
         # Загрузка артефактов истории отчетов Allure, хранение в течение 7 дней.
 
