@@ -99,7 +99,7 @@ jobs:
         # Генерация Allure отчета на основе результатов тестов. Отчет будет сохранен в директории _site.
 
       - name: Save Allure report with history
-        run: cp -R _site/history allure-results/history
+        run: cp -R allure-report/history allure-results/history
         # Сохранение истории предыдущих отчетов для отображения истории в Allure.
 
       - name: Upload allure-results with history
@@ -128,14 +128,14 @@ jobs:
       - name: Download Allure report artifact
         uses: actions/download-artifact@v3
         with:
-          name: _site
-          path: _site
+          name: allure-report
+          path: allure-report
         # Скачивание артефакта с Allure отчетом (_site).
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: _site
+          path: allure-report
         # Загрузка отчета на GitHub Pages для публикации.
 
       - name: Deploy to GitHub Pages
