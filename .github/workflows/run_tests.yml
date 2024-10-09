@@ -53,9 +53,19 @@ jobs:
 
     - name: Generate Allure report
       run: |
-        # Объедините старые и новые результаты
-        cp -r previous-allure-results/* allure-results/
-        allure generate allure-results --clean -o allure-report
+        # Создаем директорию для объединенных результатов
+        mkdir -p combined-allure-results
+
+        # Проверяем на наличие старых результатов и копируем их
+        if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
+          cp -r previous-allure-results/* combined-allure-results/
+        fi
+
+        # Копируем новые результаты в ту же директорию
+        cp -r allure-results/* combined-allure-results/
+
+        # Генерируем отчет из объединенных результатов
+        allure generate combined-allure-results --clean -o allure-report
 
     - name: Upload Allure report
       uses: actions/upload-artifact@v3
