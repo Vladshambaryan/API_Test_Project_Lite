@@ -30,6 +30,11 @@ jobs:
       run: |
         pytest --alluredir=allure-results
 
+    - name: List uploaded allure results
+      run: |
+        echo "Artifacts uploaded:"
+        ls -la allure-results/
+
     - name: Upload Allure results
       uses: actions/upload-artifact@v3
       with:
@@ -61,7 +66,7 @@ jobs:
         sudo mv allure-2.22.1 /opt/allure
         sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
 
-    - name: List contents of previous allure results
+    - name: List previous allure results
       run: |
         ls -la previous-allure-results/
 
@@ -81,7 +86,7 @@ jobs:
 
     - name: List contents of combined allure results
       run: |
-        ls -la combined-allure-results/history/
+        ls -la combined-allure-results/
 
     - name: Generate Allure report
       run: |
