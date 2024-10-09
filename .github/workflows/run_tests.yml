@@ -110,19 +110,21 @@ jobs:
         name: allure-report
         path: allure-report/
 
-    - name: Upload Allure history
+    - name: Prepare and upload Allure history
       run: |
         if [ -d combined-allure-results/history ]; then
-          echo "Uploading Allure history..."
-          mkdir -p allure-history
+          echo "Allure history directory exists. Preparing for upload..."
           cp -r combined-allure-results/history allure-history/
-          echo "Allure history uploaded."
+          echo "Allure history prepared."
         else
           echo "No Allure history found to upload."
+          exit 0  # Exit with success if history directory doesn't exist
         fi
-      
+
     - name: Upload Allure history artifact
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
         path: allure-history/
+        if-no-files-found: warn
+        include-hidden-files: false
