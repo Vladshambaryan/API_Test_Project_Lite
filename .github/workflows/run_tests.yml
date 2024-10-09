@@ -22,7 +22,7 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     name: Run API Tests
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,12 +38,12 @@ jobs:
       - name: Create allure-results directory
         run: mkdir -p allure-results
 
-      - name: Download previous Allure history (fail if not found)
+      - name: Download previous Allure history (if any)
         uses: actions/download-artifact@v3
         with:
           name: allure-results
           path: allure-results/history
-        continue-on-error: true # Не прерывайте выполнение, если артефакт не найден
+        continue-on-error: true # Продолжить даже если артефакт не найден
 
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
