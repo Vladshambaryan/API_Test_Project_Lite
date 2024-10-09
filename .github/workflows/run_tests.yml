@@ -56,12 +56,12 @@ jobs:
         # Создаем директорию для объединенных результатов
         mkdir -p combined-allure-results
 
-        # Проверяем на наличие старых результатов и копируем их
+        # Проверяем наличие предыдущих результатов и копируем их
         if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
           cp -r previous-allure-results/* combined-allure-results/
         fi
 
-        # Проверяем на наличие новых результатов и копируем их
+        # Проверяем наличие новых результатов и копируем их
         if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
           cp -r allure-results/* combined-allure-results/
         fi
