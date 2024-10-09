@@ -109,4 +109,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
-        path: allure-history/
+        path: home/runner/work/API_Test_Project_Lite/API_Test_Project_Lite/previous-allure-results
