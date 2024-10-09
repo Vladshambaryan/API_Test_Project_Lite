@@ -28,14 +28,19 @@ jobs:
 
     - name: Run tests with pytest
       run: |
-        pytest --alluredir=allure-results || echo "No allure results generated."
+        pytest --alluredir=allure-results
+
+    - name: List uploaded allure results
+      run: |
+        echo "Artifacts uploaded:"
+        ls -la allure-results/
 
     - name: Upload Allure results
       uses: actions/upload-artifact@v3
       with:
         name: allure-results
         path: allure-results/
-      
+
   report:
     runs-on: ubuntu-latest
     needs: test
@@ -45,7 +50,7 @@ jobs:
       run: |
         mkdir -p previous-allure-results
 
-    - name: Download previous Allure results
+    - name: Download previous Allure history
       uses: actions/download-artifact@v3
       with:
         name: allure-results
@@ -53,12 +58,8 @@ jobs:
 
     - name: List previous allure results
       run: |
-        if [ -d previous-allure-results ]; then
-          echo "Previous allure results:"
-          ls -la previous-allure-results/
-        else
-          echo "No previous allure results found."
-        fi
+        echo "Checking previous allure results:"
+        ls -la previous-allure-results/
 
     - name: Checkout code
       uses: actions/checkout@v2
@@ -70,28 +71,33 @@ jobs:
         sudo mv allure-2.22.1 /opt/allure
         sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
 
+    - name: List contents of current allure results
+      run: |
+        echo "Checking current allure results:"
+        ls -la allure-results/
+
     - name: Combine previous and current Allure results
       run: |
         mkdir -p combined-allure-results
         if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
           cp -r previous-allure-results/* combined-allure-results/
+        else
+          echo "No previous allure results found."
         fi
         if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
           cp -r allure-results/* combined-allure-results/
+        else
+          echo "No current allure results found."
         fi
 
     - name: List contents of combined allure results
       run: |
-        if [ -d combined-allure-results ]; then
-          echo "Combined allure results:"
-          ls -la combined-allure-results/
-        else
-          echo "No combined allure results found."
-        fi
+        echo "Combined allure results:"
+        ls -la combined-allure-results/
 
     - name: Generate Allure report
       run: |
-        allure generate combined-allure-results -o allure-report || echo "Allure report generation failed."
+        allure generate combined-allure-results -o allure-report
 
     - name: Upload Allure report
       uses: actions/upload-artifact@v3
@@ -100,16 +106,7 @@ jobs:
         path: allure-report/
 
     - name: Upload Allure history
-      run: |
-        if [ -d combined-allure-results/history ]; then
-          echo "Uploading Allure history..."
-          mkdir -p allure-history
-          cp -r combined-allure-results/history allure-history/
-          echo "Allure history uploaded."
-        else
-          echo "No Allure history found to upload."
-        fi
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
-        path: allure-history/
+        path: combined-allure-results/history/
