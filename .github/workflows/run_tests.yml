@@ -120,6 +120,8 @@ jobs:
         else
           echo "No Allure history found to upload."
         fi
+      
+    - name: Upload Allure history artifact
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
