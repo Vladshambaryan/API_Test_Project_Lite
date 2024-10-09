@@ -43,22 +43,19 @@ jobs:
         with:
           name: allure-history
           path: allure-results/history
-        continue-on-error: false
+        continue-on-error: true # Не прерывайте выполнение, если артефакт не найден
 
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
-        continue-on-error: false
 
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
-        continue-on-error: false
 
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -m regression --alluredir=allure-results
-        continue-on-error: false
 
       - name: Check allure-results directory
         run: |
