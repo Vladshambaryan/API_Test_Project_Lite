@@ -60,6 +60,7 @@ jobs:
     - name: Prepare Allure history
       run: |
         mkdir -p allure-history
+        # Copy history from previous allure results if it exists
         if [ -d previous-allure-results/history ]; then
           cp -r previous-allure-results/history/* allure-history/
         fi
@@ -85,27 +86,7 @@ jobs:
         path: allure-report/
 
     - name: Upload Allure history
-      run: |
-        if [ -d allure-history ] && [ "$(ls -A allure-history)" ]; then
-          echo "Uploading Allure history..."
-          # Use upload-artifact here instead of run
-          echo "Uploading allure history..."
-        else
-          echo "No Allure history to upload."
-          exit 0
-        fi
-
-    - name: Upload Allure history artifact
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
         path: allure-history/
-        
-    - name: Check if report archive exists
-      run: |
-        if [ -f allure-report.tgz ]; then
-          echo "Report archive found. Extracting..."
-          tar -zxvf allure-report.tgz -C ./allure-history
-        else
-          echo "No report archive found."
-        fi
