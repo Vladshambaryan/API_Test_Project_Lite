@@ -78,4 +78,49 @@ jobs:
           distribution: 'microsoft'
           java-version: '17'
 
-      - name
+      - name: Install Allure
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz \
+          && tar -zxvf allure-2.30.0.tgz -C /opt/ \
+          && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+
+      - name: Generate Allure report
+        run: allure generate -c allure-results -o allure-report --history
+
+      - name: Save Allure history
+        run: cp -R allure-report/history allure-results/history
+
+      - name: Upload allure-results with history
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+          retention-days: 7
+
+      - name: Save Allure report
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 1
+
+  publish-report:
+    name: Report publication
+    runs-on: ubuntu-latest
+    needs: run-tests
+
+    steps:
+      - name: Download Allure report artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: allure-report
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1.2.9
