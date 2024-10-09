@@ -62,25 +62,25 @@ jobs:
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
-        continue-on-error: true
+        continue-on-error: false
         # Запуск всех тестов с записью результатов в директорию allure-results (при выборе опции 'all').
 
       - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
-        continue-on-error: true
+        continue-on-error: false
         # Запуск smoke-тестов (при выборе опции 'smoke').
 
       - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -m regression --alluredir=allure-results
-        continue-on-error: true
+        continue-on-error: false
         # Запуск регрессионных тестов (при выборе 'regression').
 
       - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'"
         run: pytest -m extended --alluredir=allure-results
-        continue-on-error: true
+        continue-on-error: false
         # Запуск расширенных тестов (при выборе 'extended').
 
       - name: Check allure-results directory
@@ -97,7 +97,10 @@ jobs:
         # Установка Java 17, необходимого для работы Allure (он генерирует отчеты на Java).
 
       - name: Install Allure
-        run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && sudo tar -zxvf allure-2.30.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz \
+          && tar -zxvf allure-2.30.0.tgz -C /opt/ \
+          && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
         # Установка Allure через скачивание архива и распаковку его на виртуальной машине.
 
       - name: Generate Allure report
@@ -136,7 +139,7 @@ jobs:
         with:
           name: allure-report
           path: allure-report
-        # Скачивание артефакта с Allure отчетом ().
+        # Скачивание артефакта с Allure отчетом.
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
