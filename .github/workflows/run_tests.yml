@@ -53,7 +53,6 @@ jobs:
 
     - name: Generate Allure report
       run: |
-        # Создаем директорию для объединенных результатов
         mkdir -p combined-allure-results
 
         # Проверяем наличие предыдущих результатов и копируем их
