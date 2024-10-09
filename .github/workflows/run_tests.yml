@@ -23,18 +23,18 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip  # Обновляем pip
-        pip install -r requirements.txt  # Устанавливаем зависимости из файла requirements.txt
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Run tests with pytest
       run: |
-        pytest --alluredir=allure-results  # Запускаем тесты и сохраняем результаты в allure-results/
+        pytest --alluredir=allure-results
 
     - name: Upload Allure results
       uses: actions/upload-artifact@v3
       with:
-        name: allure-results  # Имя артефакта
-        path: allure-results/  # Путь к папке с результатами
+        name: allure-results
+        path: allure-results/
 
   report:
     runs-on: ubuntu-latest
@@ -44,49 +44,62 @@ jobs:
     - name: Download previous Allure results
       uses: actions/download-artifact@v3
       with:
-        name: allure-results  # Имя артефакта для загрузки
-        path: previous-allure-results/  # Путь для сохранения загруженных результатов
+        name: allure-results
+        path: previous-allure-results/
 
     - name: Checkout code
       uses: actions/checkout@v2
 
     - name: Install Allure
       run: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz  # Скачиваем Allure
-        tar -zxvf allure-2.22.1.tgz  # Распаковываем архив
-        sudo mv allure-2.22.1 /opt/allure  # Перемещаем распакованные файлы в /opt
-        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure  # Создаем символическую ссылку на исполняемый файл
+        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz
+        tar -zxvf allure-2.22.1.tgz
+        sudo mv allure-2.22.1 /opt/allure
+        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
 
     - name: Prepare Allure history
       run: |
-        mkdir -p allure-history  # Создаем папку для хранения истории
-        if [ -d previous-allure-results/history ]; then  # Проверяем, существует ли папка истории
-          cp -r previous-allure-results/history/* allure-history/  # Копируем историю из предыдущих результатов
+        mkdir -p allure-history
+        # Копируем историю из предыдущих результатов
+        if [ -d previous-allure-results/history ]; then
+          cp -r previous-allure-results/history/* allure-history/
         fi
 
     - name: Combine previous and current Allure results
       run: |
-        mkdir -p combined-allure-results  # Создаем папку для объединенных результатов
+        mkdir -p combined-allure-results
+        # Копируем предыдущие результаты
         if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
-          cp -r previous-allure-results/* combined-allure-results/  # Копируем старые результаты
+          cp -r previous-allure-results/* combined-allure-results/
         fi
+        # Копируем текущие результаты
         if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
-          cp -r allure-results/* combined-allure-results/  # Копируем текущие результаты
+          cp -r allure-results/* combined-allure-results/
         fi
 
-    - name: Generate Allure report
+    - name: Copy history to combined results
       run: |
-        # Генерирует отчет из объединенных результатов
+        if [ -d allure-history ]; then
+          cp -r allure-history/* combined-allure-results/history/
+        fi
+
+    - name: Generate Allure report from combined results
+      run: |
         allure generate combined-allure-results -o allure-report
 
     - name: Upload Allure report
       uses: actions/upload-artifact@v3
       with:
-        name: allure-report  # Имя артефакта отчета
-        path: allure-report/  # Путь к сгенерированному отчету
+        name: allure-report
+        path: allure-report/
+
+    - name: Save Allure history
+      run: |
+        mkdir -p allure-history
+        cp -r allure-report/history/* allure-history/
 
     - name: Upload Allure history
       uses: actions/upload-artifact@v3
       with:
-        name: allure-history  # Имя артефакта истории
-        path: allure-history/  # Путь к папке с историей
+        name: allure-history
+        path: allure-history/
