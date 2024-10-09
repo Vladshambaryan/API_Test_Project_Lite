@@ -67,9 +67,9 @@ jobs:
           cp -r allure-results/* combined-allure-results/
         fi
 
-    - name: List combined allure results
+    - name: List contents of combined allure results
       run: |
-        ls -la combined-allure-results/
+        ls -la combined-allure-results/history/
 
     - name: Generate Allure report
       run: |
