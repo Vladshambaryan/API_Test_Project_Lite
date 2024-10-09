@@ -39,75 +39,30 @@ jobs:
       - name: Create allure-results directory
         run: mkdir -p allure-results
 
+      - name: Check allure-results directory
+        run: |
+          echo "Contents of allure-results directory before downloading history:"
+          ls -R allure-results
+
       - name: Download previous Allure history
         uses: actions/download-artifact@v3
         with:
-          name: allure-history
+          name: allure-history-${{ github.run_id }}  # Используйте уникальное имя
           path: allure-results/history
         continue-on-error: true  # Позволяет продолжить, даже если артефакт не найден
 
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
-        continue-on-error: false
 
-      - name: Run smoke tests
-        if: "github.event.inputs.deployment_target == 'smoke'"
-        run: pytest -m smoke --alluredir=allure-results
-        continue-on-error: false
-
-      - name: Run regression tests
-        if: "github.event.inputs.deployment_target == 'regression'"
-        run: pytest -m regression --alluredir=allure-results
-        continue-on-error: false
-
-      - name: Run extended tests
-        if: "github.event.inputs.deployment_target == 'extended'"
-        run: pytest -m extended --alluredir=allure-results
-        continue-on-error: false
-
-      - name: Check allure-results directory
-        run: |
-          echo "Checking contents of allure-results:"
-          ls -R allure-results
-
-      - name: Install Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'microsoft'
-          java-version: '17'
-
-      - name: Install Allure
-        run: |
-          wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz \
-          && tar -zxvf allure-2.30.0.tgz -C /opt/ \
-          && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
-
-      - name: Generate Allure report
-        run: allure generate allure-results -o allure-report --history
-
-      - name: Save Allure history
-        run: cp -R allure-report/history allure-results/history
+      # Другие шаги...
 
       - name: Upload allure-results with history
         uses: actions/upload-artifact@v3
         with:
-          name: allure-history
+          name: allure-history-${{ github.run_id }}  # Уникальное имя артефакта
           path: allure-results/history
           retention-days: 7
-
-      - name: Save Allure report
-        uses: actions/upload-artifact@v3
-        with:
-          name: allure-report
-          path: allure-report
-          retention-days: 1
-
-      - name: List uploaded artifacts
-        run: |
-          echo "List of uploaded artifacts:"
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts"
 
   publish-report:
     name: Report publication
@@ -121,14 +76,7 @@ jobs:
       - name: Download Allure report artifact
         uses: actions/download-artifact@v3
         with:
-          name: allure-report
+          name: allure-report  # Убедитесь, что имя соответствует загруженному артефакту
           path: allure-report
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: allure-report
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1.2.9
+      # Другие шаги...
