@@ -50,27 +50,15 @@ jobs:
     - name: Download previous Allure results
       uses: actions/download-artifact@v3
       with:
-        name: allure-results
+        name: allure-results-history
         path: previous-allure-results/
 
         
-    # Установка Allure для генерации отчетов
-    - name: Install Allure
+    # Генерация Allure отчета
+    - name: Generate Allure report
       run: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz
-        tar -zxvf allure-2.22.1.tgz
-        sudo mv allure-2.22.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
+        allure generate Allure results -o allure-report
 
-
-    # Подготовка истории Allure
-    - name: Prepare Allure history
-      run: |
-        mkdir -p allure-history
-        # Копирование истории из предыдущих результатов, если она существует
-        if [ -d previous-allure-results/history ]; then
-          cp -r previous-allure-results/history/* allure-history/
-        fi
 
     # Загрузка отчета Allure в качестве артефакта
     - name: Upload Allure report
@@ -80,8 +68,8 @@ jobs:
         path: allure-report/
 
     # Загрузка истории Allure
-    - name: Upload combined-allure-results
+    - name: Upload allure-results-history
       uses: actions/upload-artifact@v3
       with:
-        name: combined-allure-results
-        path: combined-allure-results/history/
+        name: allure-results-history
+        path: allure-results-history/history/
