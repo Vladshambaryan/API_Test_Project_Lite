@@ -1,92 +1,92 @@
-name: CI Pipeline with Allure Reports  # Название рабочего процесса
+name: CI Pipeline with Allure Reports
 
 on:
-  push:  # Запуск рабочего процесса при каждом пуше
+  push:
     branches:
-      - main  # Указывает, что процесс запускается только для ветки main
-  pull_request:  # Запуск рабочего процесса при создании pull request
+      - main
+  pull_request:
     branches:
-      - main  # Указывает, что процесс запускается только для ветки main
+      - main
 
 jobs:
-  test:  # Определяет задание с названием "test"
-    runs-on: ubuntu-latest  # Указывает, что задание будет выполняться на последней версии Ubuntu
+  test:
+    runs-on: ubuntu-latest
 
-    steps:  # Шаги, которые будут выполняться в задании
-    - name: Checkout code  # Шаг по извлечению кода из репозитория
-      uses: actions/checkout@v2  # Использует действие для клонирования репозитория
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Set up Python  # Шаг для настройки Python
-      uses: actions/setup-python@v2  # Использует действие для установки Python
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        python-version: '3.10'  # Указывает версию Python
+        python-version: '3.10'
 
-    - name: Install dependencies  # Шаг для установки зависимостей проекта
-      run: |  # Выполнение нескольких команд
-        python -m pip install --upgrade pip  # Обновляет pip до последней версии
-        pip install -r requirements.txt  # Устанавливает зависимости из файла requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip  # Обновляем pip
+        pip install -r requirements.txt  # Устанавливаем зависимости из файла requirements.txt
 
-    - name: Run tests with pytest  # Шаг для выполнения тестов с использованием pytest
-      run: |  # Выполнение команды
-        pytest --alluredir=allure-results  # Запускает тесты и сохраняет результаты в папку allure-results
+    - name: Run tests with pytest
+      run: |
+        pytest --alluredir=allure-results  # Запускаем тесты и сохраняем результаты в allure-results/
 
-    - name: Upload Allure results  # Шаг для загрузки результатов Allure
-      uses: actions/upload-artifact@v3  # Использует действие для загрузки артефактов
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v3
       with:
         name: allure-results  # Имя артефакта
-        path: allure-results/  # Путь к артефакту
+        path: allure-results/  # Путь к папке с результатами
 
-  report:  # Определяет задание с названием "report"
-    runs-on: ubuntu-latest  # Указывает, что задание будет выполняться на последней версии Ubuntu
-    needs: test  # Указывает, что это задание зависит от завершения задания "test"
+  report:
+    runs-on: ubuntu-latest
+    needs: test
 
-    steps:  # Шаги, которые будут выполняться в задании
-    - name: Download previous Allure results  # Шаг для загрузки предыдущих результатов Allure
-      uses: actions/download-artifact@v3  # Использует действие для загрузки артефактов
+    steps:
+    - name: Download previous Allure results
+      uses: actions/download-artifact@v3
       with:
         name: allure-results  # Имя артефакта для загрузки
-        path: previous-allure-results/  # Путь, куда будут загружены артефакты
+        path: previous-allure-results/  # Путь для сохранения загруженных результатов
 
-    - name: Checkout code  # Шаг по извлечению кода из репозитория
-      uses: actions/checkout@v2  # Использует действие для клонирования репозитория
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    - name: Install Allure  # Шаг для установки Allure
-      run: |  # Выполнение нескольких команд
-        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz  # Скачивает архив Allure
-        tar -zxvf allure-2.22.1.tgz  # Разархивирует скачанный файл
-        sudo mv allure-2.22.1 /opt/allure  # Перемещает Allure в директорию /opt
-        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure  # Создает символьную ссылку для удобного доступа к команде allure
+    - name: Install Allure
+      run: |
+        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz  # Скачиваем Allure
+        tar -zxvf allure-2.22.1.tgz  # Распаковываем архив
+        sudo mv allure-2.22.1 /opt/allure  # Перемещаем распакованные файлы в /opt
+        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure  # Создаем символическую ссылку на исполняемый файл
 
-    - name: Prepare Allure history  # Шаг для подготовки истории Allure
-      run: |  # Выполнение нескольких команд
-        mkdir -p allure-history  # Создает папку для хранения истории Allure, если она не существует
-        # Копирует историю из предыдущих результатов Allure, если она существует
-        if [ -d previous-allure-results/history ]; then
-          cp -r previous-allure-results/history/* allure-history/  # Копирует файлы истории в папку allure-history
+    - name: Prepare Allure history
+      run: |
+        mkdir -p allure-history  # Создаем папку для хранения истории
+        if [ -d previous-allure-results/history ]; then  # Проверяем, существует ли папка истории
+          cp -r previous-allure-results/history/* allure-history/  # Копируем историю из предыдущих результатов
         fi
 
-    - name: Combine previous and current Allure results  # Шаг для объединения предыдущих и текущих результатов Allure
-      run: |  # Выполнение нескольких команд
-        mkdir -p combined-allure-results  # Создает папку для объединенных результатов
+    - name: Combine previous and current Allure results
+      run: |
+        mkdir -p combined-allure-results  # Создаем папку для объединенных результатов
         if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
-          cp -r previous-allure-results/* combined-allure-results/  # Копирует предыдущие результаты в объединенную папку
+          cp -r previous-allure-results/* combined-allure-results/  # Копируем старые результаты
         fi
         if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
-          cp -r allure-results/* combined-allure-results/  # Копирует текущие результаты в объединенную папку
+          cp -r allure-results/* combined-allure-results/  # Копируем текущие результаты
         fi
 
-    - name: Generate Allure report  # Шаг для генерации отчета Allure
-      run: |  # Выполнение команды
-        allure generate combined-allure-results -o allure-report  # Генерирует отчет из объединенных результатов
+    - name: Generate Allure report
+      run: |
+        # Генерирует отчет из объединенных результатов
+        allure generate combined-allure-results -o allure-report
 
-    - name: Upload Allure report  # Шаг для загрузки отчета Allure
-      uses: actions/upload-artifact@v3  # Использует действие для загрузки артефактов
+    - name: Upload Allure report
+      uses: actions/upload-artifact@v3
       with:
-        name: allure-report  # Имя артефакта
-        path: allure-report/  # Путь к артефакту
+        name: allure-report  # Имя артефакта отчета
+        path: allure-report/  # Путь к сгенерированному отчету
 
-    - name: Upload Allure history  # Шаг для загрузки истории Allure
-      uses: actions/upload-artifact@v3  # Использует действие для загрузки артефактов
+    - name: Upload Allure history
+      uses: actions/upload-artifact@v3
       with:
-        name: allure-history  # Имя артефакта
-        path: allure-history/  # Путь к артефакту
+        name: allure-history  # Имя артефакта истории
+        path: allure-history/  # Путь к папке с историей
