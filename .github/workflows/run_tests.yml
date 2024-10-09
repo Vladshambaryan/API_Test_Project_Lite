@@ -100,3 +100,12 @@ jobs:
       with:
         name: allure-history
         path: allure-history/
+        
+    - name: Check if report archive exists
+      run: |
+        if [ -f allure-report.tgz ]; then
+          echo "Report archive found. Extracting..."
+          tar -zxvf allure-report.tgz -C ./allure-history
+        else
+          echo "No report archive found."
+        fi
