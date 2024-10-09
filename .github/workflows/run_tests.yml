@@ -53,10 +53,7 @@ jobs:
         name: allure-results
         path: previous-allure-results/
 
-    # Шаг для клонирования репозитория
-    # - name: Checkout code
-    #   uses: actions/checkout@v2
-
+        
     # Установка Allure для генерации отчетов
     - name: Install Allure
       run: |
@@ -64,6 +61,7 @@ jobs:
         tar -zxvf allure-2.22.1.tgz
         sudo mv allure-2.22.1 /opt/allure
         sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
+
 
     # Подготовка истории Allure
     - name: Prepare Allure history
@@ -74,29 +72,6 @@ jobs:
           cp -r previous-allure-results/history/* allure-history/
         fi
 
-    # Объединение предыдущих и текущих результатов Allure
-    - name: Combine previous and current Allure results
-      run: |
-        mkdir -p combined-allure-results
-        if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
-          cp -r previous-allure-results/* combined-allure-results/
-        fi
-        if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
-          cp -r allure-results/* combined-allure-results/
-        fi
-
-    # Копирование истории в объединенные результаты
-    - name: Copy history to combined results
-      run: |
-        if [ -d allure-history ] && [ "$(ls -A allure-history)" ]; then
-          cp -r allure-history/* combined-allure-results/history/
-        fi
-
-    # Генерация Allure отчета
-    - name: Generate Allure report
-      run: |
-        allure generate combined-allure-results -o allure-report
-
     # Загрузка отчета Allure в качестве артефакта
     - name: Upload Allure report
       uses: actions/upload-artifact@v3
@@ -105,8 +80,8 @@ jobs:
         path: allure-report/
 
     # Загрузка истории Allure
-    # - name: Upload combined-allure-results
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: combined-allure-results
-    #     path: combined-allure-results/history/
+    - name: Upload combined-allure-results
+      uses: actions/upload-artifact@v3
+      with:
+        name: combined-allure-results
+        path: combined-allure-results/history/
