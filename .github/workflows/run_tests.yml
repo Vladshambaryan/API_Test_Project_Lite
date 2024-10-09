@@ -54,8 +54,8 @@ jobs:
         path: previous-allure-results/
 
     # Шаг для клонирования репозитория
-    - name: Checkout code
-      uses: actions/checkout@v2
+    # - name: Checkout code
+    #   uses: actions/checkout@v2
 
     # Установка Allure для генерации отчетов
     - name: Install Allure
@@ -105,8 +105,8 @@ jobs:
         path: allure-report/
 
     # Загрузка истории Allure
-    - name: Upload combined-allure-results
-      uses: actions/upload-artifact@v3
-      with:
-        name: combined-allure-results
-        path: combined-allure-results/history/
+    # - name: Upload combined-allure-results
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: combined-allure-results
+    #     path: combined-allure-results/history/
