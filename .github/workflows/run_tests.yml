@@ -105,8 +105,8 @@ jobs:
         path: allure-report/
 
     # Загрузка истории Allure
-    - name: Upload Allure history
+    - name: Upload combined-allure-results
       uses: actions/upload-artifact@v3
       with:
-        name: allure-history
-        path: home/runner/work/API_Test_Project_Lite/API_Test_Project_Lite/previous-allure-results
+        name: combined-allure-results
+        path: combined-allure-results/history/
