@@ -26,63 +26,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Download previous Allure history
+    - name: Download previous Allure history (if exists)
       uses: actions/download-artifact@v3
       with:
         name: allure-history
-        path: allure-results/history
-
-    - name: Run tests with pytest
-      run: |
-        pytest --alluredir=allure-results
-
-    - name: Save history for Allure report
-      run: |
-        mkdir -p allure-results/history
-        if [ -d allure-results/history ]; then
-          cp -r allure-results/history/* allure-results/
-        fi
-
-    - name: Upload Allure results
-      uses: actions/upload-artifact@v3
-      with:
-        name: allure-results
-        path: allure-results/
-
-  report:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Install Allure
-      run: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz
-        tar -zxvf allure-2.22.1.tgz
-        sudo mv allure-2.22.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
-
-    - name: Download Allure results and history
-      uses: actions/download-artifact@v3
-      with:
-        name: allure-results
-        path: allure-results/
-
-    - name: Generate Allure report with history
-      run: |
-        mkdir -p allure-report
-        allure generate allure-results --clean -o allure-report
-
-    - name: Upload Allure report
-      uses: actions/upload-artifact@v3
-      with:
-        name: allure-report
-        path: allure-report/
-
-    - name: Upload Allure history
-      uses: actions/upload-artifact@v3
-      with:
-        name: allure-history
-        path: allure-results/history/
