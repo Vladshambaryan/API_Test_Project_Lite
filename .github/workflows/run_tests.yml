@@ -61,8 +61,10 @@ jobs:
           cp -r previous-allure-results/* combined-allure-results/
         fi
 
-        # Копируем новые результаты в ту же директорию
-        cp -r allure-results/* combined-allure-results/
+        # Проверяем на наличие новых результатов и копируем их
+        if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
+          cp -r allure-results/* combined-allure-results/
+        fi
 
         # Генерируем отчет из объединенных результатов
         allure generate combined-allure-results --clean -o allure-report
