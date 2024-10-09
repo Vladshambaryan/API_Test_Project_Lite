@@ -103,6 +103,12 @@ jobs:
           path: allure-report
           retention-days: 1
 
+      - name: List uploaded artifacts
+        run: |
+          echo "List of uploaded artifacts:"
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts"
+
   publish-report:
     name: Report publication
     runs-on: ubuntu-latest
