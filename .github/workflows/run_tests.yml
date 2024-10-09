@@ -15,7 +15,7 @@ jobs:
     steps:
     # Шаг для клонирования репозитория
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     # Шаг для установки Python
     - name: Set up Python
@@ -34,6 +34,13 @@ jobs:
       run: |
         pytest --alluredir=allure-results
 
+    # Загрузка Allure результатов как артефакт
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-results
+        path: allure-results/
+
   report:
     runs-on: ubuntu-latest
     needs: test
@@ -42,10 +49,14 @@ jobs:
     # Установка Allure
     - name: Install Allure
       run: |
-        wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz
-        tar -zxvf allure-2.22.1.tgz
-        sudo mv allure-2.22.1 /opt/allure
-        sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
+        if ! command -v allure &> /dev/null; then
+            wget https://github.com/allure-framework/allure2/releases/download/2.22.1/allure-2.22.1.tgz
+            tar -zxvf allure-2.22.1.tgz
+            sudo mv allure-2.22.1 /opt/allure
+            sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
+        else
+            echo "Allure is already installed."
+        fi
 
     # Загрузка предыдущих результатов Allure
     - name: Download previous Allure results
@@ -57,7 +68,11 @@ jobs:
     # Генерация Allure отчета с объединением истории
     - name: Generate Allure report
       run: |
-        allure generate previous-allure-results allure-results -o allure-report
+        if [ -d previous-allure-results ] && [ -d allure-results ]; then
+            allure generate previous-allure-results allure-results -o allure-report
+        else
+            echo "No Allure results found to generate the report."
+        fi
 
     # Загрузка отчета Allure в качестве артефакта
     - name: Upload Allure report
@@ -65,10 +80,3 @@ jobs:
       with:
         name: allure-report
         path: allure-report/
-
-    # # Загрузка истории Allure
-    # - name: Upload Allure report history
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: allure-report
-    #     path: allure-report/
