@@ -26,29 +26,38 @@ jobs:
     steps:
       - name: Checkout autotests
         uses: actions/checkout@v4
+        
+      # Скачивание истории отчетов Allure
+      - name: Download Allure history
+        uses: actions/download-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+        
       - name: Set up Python environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Install dependencies.
+          
+      - name: Install dependencies
         run: pip install -r requirements.txt
         
-      - name: run all tests
+      - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
         run: pytest --alluredir=allure-results
         continue-on-error: true
         
-      - name: run smoke tests
+      - name: Run smoke tests
         if: "github.event.inputs.deployment_target == 'smoke'"
         run: pytest -m smoke --alluredir=allure-results
         continue-on-error: true
         
-      - name: run regression tests
+      - name: Run regression tests
         if: "github.event.inputs.deployment_target == 'regression'"
         run: pytest -m regression --alluredir=allure-results 
         continue-on-error: true
         
-      - name: run extended tests
+      - name: Run extended tests
         if: "github.event.inputs.deployment_target == 'extended'" 
         run: pytest -m extended --alluredir=allure-results
         continue-on-error: true
@@ -61,15 +70,25 @@ jobs:
           
       - name: Install Allure
         run: sudo wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz && sudo tar -zxvf allure-2.30.0.tgz -C /opt/ && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
-      - name: Generate report
-        run: allure generate -c allure-results -o _site
         
-      - name: Save allure report
+      # Генерация отчета с учетом истории
+      - name: Generate report with history
+        run: allure generate allure-results --clean -o _site
+        
+      # Сохранение Allure отчета и истории
+      - name: Upload Allure report and history
         uses: actions/upload-artifact@v3
         with:
-          name: _site
+          name: allure-report
           path: _site
-          retention-days: 1 
+          retention-days: 1
+          
+      - name: Upload Allure history
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-history
+          path: _site/history
+          retention-days: 1
           
   publish-report:
     name: Report publication
@@ -78,8 +97,16 @@ jobs:
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
+        with:
+          name: allure-report
+          path: _site
+      
+      # Публикация на GitHub Pages
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
+        with:
+          path: _site
+        
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.9
