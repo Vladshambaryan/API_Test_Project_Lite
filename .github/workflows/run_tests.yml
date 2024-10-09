@@ -39,13 +39,13 @@ jobs:
       - name: Create allure-results directory
         run: mkdir -p allure-results
 
-      - name: Download previous Allure history (fail if not found)
+      - name: Download previous Allure history (ignore if not found)
         uses: actions/download-artifact@v3
         with:
           name: allure-history
           path: allure-results/history
-        continue-on-error: false
-        # Обязательно скачиваем историю, если артефакт не найден — workflow завершится с ошибкой.
+        continue-on-error: true
+        # Пропускаем ошибку, если артефакт истории отсутствует (например, если это первый запуск).
 
       - name: Run all tests
         if: "github.event.inputs.deployment_target == 'all'"
@@ -96,7 +96,7 @@ jobs:
           name: allure-history
           path: allure-results/history
           retention-days: 7
-        # Артефакт истории сохраняется на GitHub, чтобы быть доступным для следующих запусков.
+        # Загружаем артефакт истории, чтобы использовать его в последующих запусках.
 
       - name: Save Allure report
         uses: actions/upload-artifact@v3
@@ -104,7 +104,7 @@ jobs:
           name: allure-report
           path: allure-report
           retention-days: 1
-        # Сохраняем сам Allure отчет как артефакт.
+        # Сохраняем отчёт Allure для последующего скачивания.
 
   publish-report:
     name: Report publication
