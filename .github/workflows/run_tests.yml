@@ -88,10 +88,14 @@ jobs:
       run: |
         if [ -d allure-history ] && [ "$(ls -A allure-history)" ]; then
           echo "Uploading Allure history..."
+          # Use upload-artifact here instead of run
+          echo "Uploading allure history..."
         else
           echo "No Allure history to upload."
           exit 0
         fi
+
+    - name: Upload Allure history artifact
       uses: actions/upload-artifact@v3
       with:
         name: allure-history
