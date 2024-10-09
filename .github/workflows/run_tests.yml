@@ -56,6 +56,11 @@ jobs:
         name: allure-results
         path: previous-allure-results/
 
+    - name: List previous allure results
+      run: |
+        echo "Checking previous allure results:"
+        ls -la previous-allure-results/
+
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -66,12 +71,9 @@ jobs:
         sudo mv allure-2.22.1 /opt/allure
         sudo ln -s /opt/allure/bin/allure /usr/local/bin/allure
 
-    - name: List previous allure results
-      run: |
-        ls -la previous-allure-results/
-
     - name: List contents of current allure results
       run: |
+        echo "Checking current allure results:"
         ls -la allure-results/
 
     - name: Combine previous and current Allure results
@@ -79,13 +81,18 @@ jobs:
         mkdir -p combined-allure-results
         if [ -d previous-allure-results ] && [ "$(ls -A previous-allure-results)" ]; then
           cp -r previous-allure-results/* combined-allure-results/
+        else
+          echo "No previous allure results found."
         fi
         if [ -d allure-results ] && [ "$(ls -A allure-results)" ]; then
           cp -r allure-results/* combined-allure-results/
+        else
+          echo "No current allure results found."
         fi
 
     - name: List contents of combined allure results
       run: |
+        echo "Combined allure results:"
         ls -la combined-allure-results/
 
     - name: Generate Allure report
