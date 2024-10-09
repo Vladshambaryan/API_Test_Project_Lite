@@ -126,3 +126,134 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.9
+
+
+
+name: Python autotests
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: choose tests set
+        required: true
+        type: choice
+        default: smoke
+        options:
+          - all
+          - smoke
+          - regression
+          - extended
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    name: Run autotests
+    
+    steps:
+      - name: Checkout autotests
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create allure-results directory
+        run: mkdir -p allure-results
+
+      - name: Download previous Allure history (ignore if not found)
+        uses: actions/download-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+        continue-on-error: true
+        # Пропускаем ошибку, если артефакт истории отсутствует (например, если это первый запуск).
+
+      - name: Run all tests
+        if: "github.event.inputs.deployment_target == 'all'"
+        run: pytest --alluredir=allure-results
+        continue-on-error: false
+
+      - name: Run smoke tests
+        if: "github.event.inputs.deployment_target == 'smoke'"
+        run: pytest -m smoke --alluredir=allure-results
+        continue-on-error: false
+
+      - name: Run regression tests
+        if: "github.event.inputs.deployment_target == 'regression'"
+        run: pytest -m regression --alluredir=allure-results
+        continue-on-error: false
+
+      - name: Run extended tests
+        if: "github.event.inputs.deployment_target == 'extended'"
+        run: pytest -m extended --alluredir=allure-results
+        continue-on-error: false
+
+      - name: Check allure-results directory
+        run: |
+          echo "Checking contents of allure-results:"
+          ls -R allure-results
+
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+
+      - name: Install Allure
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.30.0/allure-2.30.0.tgz \
+          && tar -zxvf allure-2.30.0.tgz -C /opt/ \
+          && sudo ln -s /opt/allure-2.30.0/bin/allure /usr/bin/allure
+
+      - name: Generate Allure report
+        run: allure generate -c allure-results -o allure-report --history
+
+      - name: Save Allure history
+        run: cp -R allure-report/history allure-results/history
+
+      - name: Upload allure-results with history
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-history
+          path: allure-results/history
+          retention-days: 7
+        # Загружаем артефакт истории, чтобы использовать его в последующих запусках.
+
+      - name: Save Allure report
+        uses: actions/upload-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+          retention-days: 1
+        # Сохраняем отчёт Allure для последующего скачивания.
+
+  publish-report:
+    name: Report publication
+    runs-on: ubuntu-latest
+    needs: run-tests
+
+    steps:
+      - name: Download Allure report artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: allure-report
+          path: allure-report
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: allure-report
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1.2.9
